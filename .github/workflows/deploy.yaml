@@ -1,0 +1,35 @@
+name: Build and Deploy
+on: [push]
+permissions:
+  contents: write
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x 
+
+      - name: Install dependencies for scraper 
+        run: |
+          cd scraper
+          npm ci
+          node index.js  
+
+      - name: Copy dump files to viz 
+        run: cp scraper/dump.json viz/dump.json
+
+      - name: Build the site using vite
+        run: |
+          cd viz
+          npm ci
+          npm run build
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: viz/dist
