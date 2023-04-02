@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 18.x 
 
-      - name: Install dependencies for scraper 
+      - name: Run scraper 
         run: |
           cd scraper
           npm ci
@@ -23,7 +23,7 @@ jobs:
       - name: Copy dump files to viz 
         run: cp scraper/dump.json viz/dump.json
 
-      - name: Build the site using vite
+      - name: Build the site using Vite
         run: |
           cd viz
           npm ci
