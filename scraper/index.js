@@ -11,7 +11,13 @@ function chunk(arr, n) {
 
 async function getJson(url) {
   const res = await fetch(url)
-  return res.json()
+  if (res.ok) {
+    const json = await res.json()
+    return json
+  } else {
+    console.log(await res.text())
+    throw "response not ok"
+  }
 }
 
 function sleep(ms) {
@@ -31,10 +37,11 @@ async function main() {
 
   // enrich users by adding in profile info
   // do this 50 at a time
-  const chunks = chunk(usersList, 10)
+  const chunks = chunk(usersList, 50)
   for (const chunk of chunks) {
     await chunk.map(async user => {
-      const profile = (await getJson(`https://curius.app/api/users/${user.userLink}`)).user
+      const userData = await getJson(`https://curius.app/api/users/${user.userLink}`)
+      const profile = userData.user
       console.log(`fetched response for ${user.userLink}`)
       const usefulparts = {
         created_date: profile.createdDate,
@@ -52,7 +59,7 @@ async function main() {
         const fetchedLinks = (await getJson(`https://curius.app/api/users/${profile.id}/links?page=${page}`)).userSaved
         hasLinksToFetch = links.length > 0
         links.push(...fetchedLinks.map(l => ({
-          link_id: l. id,
+          link_id: l.id,
           link: l.link,
           title: l.title,
           created_by: l.createdBy,
@@ -69,9 +76,9 @@ async function main() {
         ...users[profile.id],
         ...usefulparts,
         links,
-      } 
+      }
     })
-    await sleep(500)
+    await sleep(5000)
   }
   fs.writeFileSync('./dump.json', JSON.stringify({
     users,

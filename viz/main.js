@@ -14,7 +14,7 @@ function ForceGraph({
   nodeStroke = "#fff", // node stroke color
   nodeStrokeWidth = 1.5, // node stroke width, in pixels
   nodeStrokeOpacity = 1, // node stroke opacity
-  nodeRadius = d => 5 * Math.log(curius.users[d.id].num_followers + 2), // node radius, in pixels
+  nodeRadius = d => 5 * Math.sqrt((curius.users[d.id]?.num_followers ?? 0) + 2), // node radius, in pixels
   nodeStrength,
   linkSource = ({source}) => source, // given d in links, returns a node identifier string
   linkTarget = ({target}) => target, // given d in links, returns a node identifier string
@@ -59,7 +59,7 @@ function ForceGraph({
       .force("link", forceLink)
       .force("charge", forceNode)
       .force("center",  d3.forceCenter())
-      .force("collide", d3.forceCollide().radius(d => d.r + 1).iterations(3))
+      .force("collide", d3.forceCollide().radius(d => 5 * Math.sqrt((curius.users[d.id]?.num_followers ?? 0) + 3)).iterations(3))
       .on("tick", ticked);
 
   const svg = d3.create("svg")
@@ -88,35 +88,7 @@ function ForceGraph({
       .attr("stroke", nodeStroke)
       .attr("stroke-opacity", nodeStrokeOpacity)
       .attr("stroke-width", nodeStrokeWidth)
-      .on("mouseover", function(_, d) {
-        d3.select(this.parentNode)
-          .select("text")
-          .raise()
-          .transition()
-          .duration(200)
-          .style("opacity", 1)
-      })
-      .on("mouseleave", function(_, d) {
-        d3.select(this.parentNode)
-          .select("text")
-          .raise()
-          .transition()
-          .duration(200)
-          .style("opacity", 0)
-      })
       .call(drag(simulation));
-
-  const labels = graphNode.append("text")
-    .attr("dx", 12)
-    .attr("dy", ".35em")
-    .text((d) => {
-      const entry = curius.users[d.id]
-      return `${entry.firstName} ${entry.lastName}`
-    })
-    .style("opacity", 0)
-    .style("pointer-events", "none")
-    .style("fill", "#f00") // TODO: make this prettier
-    .call(drag(simulation));
 
   if (W) link.attr("stroke-width", ({index: i}) => W[i]);
   if (L) link.attr("stroke", ({index: i}) => L[i]);
@@ -191,7 +163,7 @@ const validUserIds = new Set(Object.values(curius.users)
 const nodes = Object.values(curius.users)
 
 // get links for the graph. currently => who follows who
-const links = nodes.flatMap(u => u.following_users
+const links = nodes.flatMap(u => (u.following_users || [])
   .filter(u => validUserIds.has(u))
   .flatMap(f => ({
     source: u.id,
