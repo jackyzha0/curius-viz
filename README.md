@@ -6,7 +6,7 @@ cd scraper
 # only run once
 npm i
 
-# actually scrape, this will product a file called dump.json which you can then use
+# actually scrape, this will produce a file called dump.json which you can then use
 node index.js
 ```
 
